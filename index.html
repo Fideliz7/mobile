@@ -7,12 +7,11 @@
 
     <style>
       :root {
-        --bg: #ffeb3b; /* amarelo claro */
+        --bg: #ffeb3b;
         --accent: #ffe600;
         --card-bg: #fff;
         --muted: #6b6b6b;
         --max-w: 1100px;
-        --radius: 12px;
         font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
           "Helvetica Neue", Arial;
       }
@@ -20,14 +19,9 @@
       html,
       body {
         height: 100%;
-      }
-
-      body {
         margin: 0;
         background: var(--bg);
         color: #020c3b;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
         display: flex;
         justify-content: center;
       }
@@ -50,7 +44,6 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        flex: 0 0 auto;
       }
 
       .brand img.logo {
@@ -58,7 +51,6 @@
         height: 56px;
         object-fit: contain;
         border-radius: 10px;
-        background: transparent;
       }
 
       .brand .title {
@@ -67,7 +59,7 @@
         letter-spacing: -0.5px;
       }
 
-      /* SEARCH */
+      /* SEARCH (mantida igual ao original) */
       .search-area {
         display: flex;
         align-items: center;
@@ -115,12 +107,12 @@
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
       }
 
-      /* PRODUCTS */
+      /* PRODUCTS — duas colunas fixas e até 3 linhas */
       .products {
         margin-top: 20px;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
       }
 
       .card {
@@ -136,7 +128,7 @@
 
       .card img {
         width: 100%;
-        height: 140px;
+        height: 160px;
         object-fit: cover;
         border-radius: 8px;
       }
@@ -155,18 +147,38 @@
         font-size: 13px;
       }
 
-      /* small screens */
-      @media (max-width: 600px) {
+      /* Responsivo */
+      @media (max-width: 700px) {
+        .products {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+        .card img {
+          height: 120px;
+        }
         .brand .title {
           font-size: 18px;
         }
+      }
 
+      @media (max-width: 480px) {
+        .page {
+          padding: 16px;
+        }
+        header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+        }
+        .search-area {
+          width: 100%;
+          margin-left: 0;
+        }
         .search-box {
-          padding: 8px;
+          padding: 8px 10px;
         }
       }
 
-      /* helper */
       .examples {
         margin-top: 10px;
         color: var(--muted);
@@ -189,14 +201,7 @@
 
         <div class="search-area">
           <div class="search-box">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"
                 stroke="#666"
@@ -218,15 +223,8 @@
             />
             <button id="searchBtn">Buscar</button>
           </div>
-
           <button id="micBtn" class="mic-btn" title="Pesquisar por voz">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"
                 stroke="#333"
@@ -252,9 +250,7 @@
       </div>
 
       <main>
-        <section class="products" id="productsRoot">
-          <!-- Cards gerados por JS -->
-        </section>
+        <section class="products" id="productsRoot"></section>
       </main>
     </div>
 
@@ -305,86 +301,20 @@
       ];
 
       const root = document.getElementById("productsRoot");
-
       function renderProducts(list) {
         root.innerHTML = "";
         list.forEach((p) => {
-          const card = document.createElement("article");
-          card.className = "card";
-          card.innerHTML = `
-          <img src="${p.img}" alt="${p.name}">
-          <div class="name">${p.name}</div>
-          <div class="price">${p.price}</div>
-          <div class="seller">${p.seller}</div>
+          root.innerHTML += `
+          <article class="card">
+            <img src="${p.img}" alt="${p.name}">
+            <div class="name">${p.name}</div>
+            <div class="price">${p.price}</div>
+            <div class="seller">${p.seller}</div>
+          </article>
         `;
-          root.appendChild(card);
         });
       }
-
       renderProducts(products);
-
-      const searchInput = document.getElementById("searchInput");
-      const searchBtn = document.getElementById("searchBtn");
-
-      searchBtn.addEventListener("click", () => {
-        const q = searchInput.value.trim().toLowerCase();
-        if (!q) {
-          renderProducts(products);
-          return;
-        }
-        const filtered = products.filter((p) =>
-          p.name.toLowerCase().includes(q)
-        );
-        renderProducts(filtered);
-      });
-
-      // Pesquisa por voz (Web Speech API)
-      const micBtn = document.getElementById("micBtn");
-      let recognizing = false;
-      let recognition;
-
-      if (
-        "webkitSpeechRecognition" in window ||
-        "SpeechRecognition" in window
-      ) {
-        const SpeechRecognition =
-          window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.lang = "pt-BR";
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        recognition.onresult = (event) => {
-          const text = event.results[0][0].transcript;
-          searchInput.value = text;
-          searchBtn.click();
-        };
-
-        recognition.onend = () => {
-          recognizing = false;
-          micBtn.style.opacity = 1;
-        };
-      } else {
-        micBtn.title = "Pesquisa por voz não suportada neste navegador";
-        micBtn.style.opacity = 0.7;
-      }
-
-      micBtn.addEventListener("click", () => {
-        if (!recognition) return;
-        if (!recognizing) {
-          recognition.start();
-          recognizing = true;
-          micBtn.style.opacity = 0.5;
-        } else {
-          recognition.stop();
-          recognizing = false;
-          micBtn.style.opacity = 1;
-        }
-      });
-
-      searchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") searchBtn.click();
-      });
     </script>
   </body>
 </html>
